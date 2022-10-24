@@ -12,6 +12,13 @@ class Product(Resource):
     help="This field is required!"
     )
 
+    parser.add_argument('store_id', 
+    type=int, 
+    required=True, 
+    help="Store id required"
+    )
+
+
 
     @jwt_required()
     def get (self, name):
@@ -29,7 +36,7 @@ class Product(Resource):
         
         data=Product.parser.parse_args()
 
-        product = ProductModel(name, data['price'])
+        product = ProductModel(name, **data)
 
         try:
             product.upsert()
@@ -41,42 +48,31 @@ class Product(Resource):
 
     @jwt_required()
     def delete(self, name):
-        product=Product.find_by_name(name)
+        product=ProductModel.find_by_name(name)
         if product:
             product.delete_from_db()
-        
+            
         return {'message': 'Item deleted'}
-    
+        
 
     def put(self, name):
         data=Product.parser.parse_args()
 
 
         product=ProductModel.find_by_name(name)
-        updated_product=ProductModel(name, data['price'])
+        updated_product=ProductModel(name, **data)
 
 
         if product is None:
-           product=ProductModel(name, data['price'])
+           product=ProductModel(name, **data)
         else:
             product.price=data['price']
         
-        product.save_to_db()
-
+        
+        product.upsert()
         return product.json()
 
 
 class ProductList(Resource):
     def get(self):
-        connection=sqlite3.connect('data.db')
-        cursor=connection.cursor()
-
-        query="SELECT * FROM products"
-        result=cursor.execute(query)
-        products=[]
-        for row in result:
-            products.append({'name':row[0], 'price': row[1]})
-
-        connection.close()
-
-        return{'products':products}
+        return{'products':[product.json() for product in ProductModel.query.all()]}

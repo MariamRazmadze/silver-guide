@@ -1,23 +1,20 @@
 from db import db
 
-class ProductModel(db.Model):
-    __tablename__ = "products"
+class StoreModel(db.Model):
+    __tablename__ = "stores"
     
     id = db.Column(db.Integer, primary_key=True)
     name=db.Column(db.String(80))
-    price=db.Column(db.Float(precision=2))
-
-    store_id=db.Column(db.Integer, db.ForeignKey('stores.id'))
-    store=db.relationship('StoreModel')
 
 
-    def __init__(self, name, price, store_id):
+    products=db.relationship('ProductModel', lazy='dynamic')
+
+
+    def __init__(self, name):
         self.name=name
-        self.price=price
-        self.store_id=store_id
     
     def json(self):
-        return {'name': self.name, 'price': self.price}
+        return {'name': self.name, 'products': [product.json() for product in self.products.all()]}
 
 
 

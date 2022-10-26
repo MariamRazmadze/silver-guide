@@ -75,4 +75,4 @@ class Product(Resource):
 
 class ProductList(Resource):
     def get(self):
-        return{'products':[product.json() for product in ProductModel.query.all()]}
+        return{'products':[product.json() for product in ProductModel.find_all()]}
